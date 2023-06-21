@@ -5,6 +5,8 @@
 !.gitignore
 !*.cpp
 !*.hpp
+!Makefile
+!*.sh
 
 # whitelist everything in ./config/
 !config/
