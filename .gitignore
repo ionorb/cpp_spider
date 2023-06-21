@@ -1,0 +1,10 @@
+*
+!*/
+
+# track this file
+!.gitignore
+!*.cpp
+!*.hpp
+
+# whitelist everything in ./config/
+!config/
