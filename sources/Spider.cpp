@@ -91,7 +91,7 @@ struct isnt_domain
 	}
 };
 
-void	Spider::scrape_urls(std::string page_url, std::list<std::string>& urls_to_visit)
+void	Spider::scrape_urls(std::string page_url, std::string domain, std::list<std::string>& urls_to_visit)
 {
 	std::string	webpage = exec((this->curl_command + page_url + this->cookies).c_str());
 	std::string				line;
@@ -106,13 +106,26 @@ void	Spider::scrape_urls(std::string page_url, std::list<std::string>& urls_to_v
 		size_t	current = 0;
 		while (current < line.size())
 		{
-			size_t start = line.find("https://", current);
+			size_t start = line.find("href=", current);
+			if (start != line.npos)
+				start += 6;
 			size_t n = 0;
-			while (delims.find(line[start + n]) == delims.npos && n != line.npos && start != line.npos)
+			while (delims.find(line[start + n]) == delims.npos 
+					&& n != line.npos 
+					&& start != line.npos)
 				n++;
 			if (n == line.npos || start == line.npos)
 				break ;
-			urls_to_visit.push_back(line.substr(start, n));
+			std::string to_visit = line.substr(start, n);
+			if (to_visit.find("/") == 0)
+			{
+				size_t i = page_url.find(domain);
+				if (i != page_url.npos)
+					i += domain.size();
+				urls_to_visit.push_back(domain.substr(0, i) + to_visit);
+			}
+			else
+				urls_to_visit.push_back(to_visit);
 			current = start + n;
 		}
 	}
@@ -145,7 +158,7 @@ void	Spider::search_pages_in_domain(std::string domain)
 						<< "\n----------------------------\n";
 			break ;
 		}
-		scrape_urls(url, this->urls_to_visit);
+		scrape_urls(url, domain, this->urls_to_visit);
 		this->urls_to_visit.remove_if(isnt_domain(domain));
 		this->urls_to_visit.sort();
 		this->urls_to_visit.unique();
