@@ -17,9 +17,9 @@ Spider::Spider()
 
 	//process cookies
 	size_t n;
-	if ((n = this->cookies.find("--compressed")) == this->cookies.npos || n + 12 >= this->cookies.size())
+	if ((n = this->cookies.find("-H")) == this->cookies.npos)
 		throw std::runtime_error("Invalid curl");
-	this->cookies = this->cookies.substr(n + 12);
+	this->cookies = this->cookies.substr(n);
 	std::cout << "COOKIES:\n" << this->cookies << std::endl;
 }
 
@@ -91,9 +91,9 @@ struct isnt_domain
 	}
 };
 
-void	Spider::scrape_urls(std::string page_url, std::string domain, std::list<std::string>& urls_to_visit)
+void	Spider::scrape_urls(std::string page_url, std::list<std::string>& urls_to_visit)
 {
-	std::string	webpage = exec((this->curl_command + page_url + this->cookies).c_str());
+	std::string	webpage = exec((this->curl_command + page_url + " " + this->cookies).c_str());
 	std::string				line;
 	std::stringstream		stream;
 	std::string				delims("\'\")< ");
@@ -111,18 +111,19 @@ void	Spider::scrape_urls(std::string page_url, std::string domain, std::list<std
 				start += 6;
 			size_t n = 0;
 			while (delims.find(line[start + n]) == delims.npos 
-					&& n != line.npos 
-					&& start != line.npos)
+					&& n != line.npos && start != line.npos 
+					&& start + n != line.npos)
 				n++;
-			if (n == line.npos || start == line.npos)
+			if (n == line.npos || start == line.npos || start + n == line.npos)
 				break ;
 			std::string to_visit = line.substr(start, n);
 			if (to_visit.find("/") == 0)
 			{
-				size_t i = page_url.find(domain);
-				if (i != page_url.npos)
-					i += domain.size();
-				urls_to_visit.push_back(domain.substr(0, i) + to_visit);
+				std::string domain = page_url.substr(0, page_url.find("/", page_url.find("://") + 3));
+				// size_t i = page_url.find(domain);
+				// if (i != page_url.npos)
+				// 	i += domain.size();
+				urls_to_visit.push_back(domain + to_visit);
 			}
 			else
 				urls_to_visit.push_back(to_visit);
@@ -158,7 +159,7 @@ void	Spider::search_pages_in_domain(std::string domain)
 						<< "\n----------------------------\n";
 			break ;
 		}
-		scrape_urls(url, domain, this->urls_to_visit);
+		scrape_urls(url, this->urls_to_visit);
 		this->urls_to_visit.remove_if(isnt_domain(domain));
 		this->urls_to_visit.sort();
 		this->urls_to_visit.unique();
@@ -166,11 +167,6 @@ void	Spider::search_pages_in_domain(std::string domain)
 		this->visited.push_back(url);
 		while (std::find(this->visited.begin(), this->visited.end(), this->urls_to_visit.front()) != this->visited.end())
 			this->urls_to_visit.pop_front();
-		// if (this->urls_to_visit.empty())
-		// {
-		// 	std::cerr << "\nBAD: {" << this->curl_command + this->url + this->cookies << "}\n";
-		// 	exit(1);
-		// }
 		if (!this->urls_to_visit.empty())
 			url = this->urls_to_visit.front();
 		srand(time(NULL));

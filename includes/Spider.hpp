@@ -36,7 +36,7 @@ private:
 	//methods
 	std::string	exec(const char* cmd);
 	// static bool	isnt_domain(std::string url);
-	void		scrape_urls(std::string page_urls, std::string domain, std::list<std::string>& urls_to_visit);
+	void		scrape_urls(std::string page_urls, std::list<std::string>& urls_to_visit);
 public:
 	//attributes
 

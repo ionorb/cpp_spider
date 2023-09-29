@@ -6,7 +6,7 @@ int	main(int ac, char **av)
 	(void)ac;
 
 	Spider	spider;
-	spider.search_pages_in_domain("companies.intra.42.fr/en/offers");
+	spider.search_pages_in_domain("https://companies.intra.42.fr/en/offers");
 	std::list<std::string> unique_subdomains = spider.extract_unique_subdomains("42.fr");
 
 	std::cout << spider.getPages().begin()->second << std::endl;
